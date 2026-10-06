@@ -10,5 +10,6 @@ native/*.part
 models/*.litertlm
 models/*.part
 release/
+release-assets/
 .DS_Store
 *.log
