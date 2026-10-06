@@ -52,7 +52,7 @@ if (process.platform === "darwin" && process.arch === "arm64") {
     `/Fe:${quoteWindows(path.join(releaseRoot, "live-music-translator-helper.exe"))}`
   ].join(" ");
   const command = `call ${quoteWindows(vcvars)} && cl ${compilerArguments}`;
-  await run("cmd.exe", ["/d", "/s", "/c", command]);
+  await runShell(command);
   await copyFile(path.join(libraryRoot, "bin", "litert-lm.dll"), path.join(releaseRoot, "litert-lm.dll"));
   await rm(windowsInclude, { recursive: true, force: true });
 } else {
@@ -117,6 +117,14 @@ function run(command, arguments_) {
     const child = spawn(command, arguments_, { cwd: root, stdio: "inherit" });
     child.once("error", reject);
     child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`${command} exited with code ${code}`)));
+  });
+}
+
+function runShell(command) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, { cwd: root, stdio: "inherit", shell: true });
+    child.once("error", reject);
+    child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`Shell command exited with code ${code}`)));
   });
 }
 
