@@ -1,0 +1,77 @@
+{
+  "name": "live-music-translator",
+  "version": "0.1.0",
+  "description": "A cross-platform, always-on-top synced lyrics overlay for language learners.",
+  "author": "Daniel Lahlafi",
+  "license": "MIT",
+  "homepage": "https://github.com/danl12353231/live-music-translator#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danl12353231/live-music-translator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/danl12353231/live-music-translator/issues"
+  },
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "prepare:model": "node scripts/download-model.js",
+    "prepare:native": "node scripts/prepare-native.js",
+    "prestart": "npm run prepare:model && npm run prepare:native",
+    "start": "electron .",
+    "smoke:translation": "npm run prepare:native && electron scripts/smoke-translation.js",
+    "test": "node --test",
+    "prepack": "npm run prepare:model && npm run prepare:native",
+    "pack": "electron-builder --dir",
+    "predist": "npm run prepare:model && npm run prepare:native",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "franc-min": "^6.2.0"
+  },
+  "devDependencies": {
+    "electron": "^38.2.1",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.livemusictranslator.app",
+    "productName": "Live Music Translator",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "src/playback/*.ps1"
+    ],
+    "extraResources": [
+      {
+        "from": "models/gemma-4-E2B-it.litertlm",
+        "to": "models/gemma-4-E2B-it.litertlm"
+      },
+      {
+        "from": "native/release",
+        "to": "native"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "category": "Education",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  }
+}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Music Translator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="panel">
+      <header>
+        <div class="track-wrap">
+          <span id="status-dot" aria-hidden="true"></span>
+          <span id="track">Live Music Translator</span>
+          <span id="language"></span>
+        </div>
+        <nav>
+          <button id="settings-button" title="Settings" aria-label="Settings">⚙</button>
+          <button id="minimize" title="Minimize" aria-label="Minimize">—</button>
+          <button id="close" title="Close" aria-label="Close">×</button>
+        </nav>
+      </header>
+
+      <section id="lyrics" aria-live="polite">
+        <div id="original">Play a song to begin</div>
+        <div id="translation"></div>
+      </section>
+
+      <section id="settings" hidden>
+        <label>Translate into
+          <select id="target-language"></select>
+        </label>
+        <label>Timing
+          <span class="timing-control">
+            <button id="earlier" title="Show lyrics earlier">−</button>
+            <output id="offset">0.0s</output>
+            <button id="later" title="Show lyrics later">+</button>
+          </span>
+        </label>
+        <div class="model-setting">
+          <div>
+            <strong>Offline translation</strong>
+            <span id="translator-status">Checking local model…</span>
+          </div>
+          <button id="install-translator" class="primary" type="button">Download Gemma · 2.01 GB</button>
+          <progress id="translator-progress" max="1" value="0" hidden></progress>
+        </div>
+      </section>
+    </main>
+    <script src="renderer.js"></script>
+  </body>
+</html>

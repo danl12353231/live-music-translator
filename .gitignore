@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-check-*/
+build/translation/
+native/sdk/
+native/release/
+native/bin/
+native/*.zip
+native/*.part
+models/*.litertlm
+models/*.part
+release/
+.DS_Store
+*.log
