@@ -18,7 +18,7 @@ An always-on-top, line-by-line lyrics translator for language learning. Live Mus
 | Platform | Release build |
 | --- | --- |
 | macOS | Apple silicon (`macos-arm64`) |
-| Windows | Windows 10/11 x64 (`windows-x64`) |
+| Windows | Windows 10/11 x64 ZIP (`windows-x64`) |
 | Linux | x64 AppImage (`linux-x64`) |
 
 The local Gemma model is included, so no model download is needed after installation. Because each offline installer is larger than GitHub's 2 GiB per-file limit, release pages may provide it as numbered `.part-*` files. Download every part for your platform and follow the included `REASSEMBLE-*.txt` instructions. Checksums are provided with every build.

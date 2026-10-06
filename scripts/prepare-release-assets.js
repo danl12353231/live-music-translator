@@ -11,7 +11,7 @@ const maxPartBytes = Number(process.env.RELEASE_PART_BYTES) || 1_900_000_000;
 if (!Number.isSafeInteger(maxPartBytes) || maxPartBytes < 1) throw new Error("Invalid release part size");
 const extensions = {
   "macos-arm64": [".dmg"],
-  "windows-x64": [".exe"],
+  "windows-x64": [".zip"],
   "linux-x64": [".appimage"]
 };
 
@@ -98,7 +98,7 @@ function reassemblyInstructions(target, originalName) {
       `$output = [IO.File]::Create(\"${originalName}\")`,
       `Get-ChildItem \"${originalName}.part-*\" | Sort-Object Name | ForEach-Object { $input = [IO.File]::OpenRead($_.FullName); $input.CopyTo($output); $input.Dispose() }`,
       "$output.Dispose()",
-      `Then run \"${originalName}\". Windows SmartScreen may warn because this community build is unsigned.`
+      `Extract \"${originalName}\", then run \"Live Music Translator.exe\". Windows SmartScreen may warn because this community build is unsigned.`
     ];
   }
   return [
