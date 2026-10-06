@@ -43,3 +43,58 @@ test("model manager rejects a model with the wrong checksum", async (context) =>
   await assert.rejects(() => manager.download(), /checksum/);
   assert.equal(manager.status().phase, "error");
 });
+
+test("model manager joins GitHub release parts before verification", async (context) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "lingua-model-test-"));
+  context.after(() => rm(directory, { recursive: true, force: true }));
+  const parts = [Buffer.from("first model part "), Buffer.from("and the second part")];
+  const content = Buffer.concat(parts);
+  const requested = [];
+  const manager = new ModelManager(directory, {
+    model: {
+      name: "Test",
+      fileName: "parts.litertlm",
+      size: content.length,
+      sha256: createHash("sha256").update(content).digest("hex"),
+      downloads: [{
+        name: "GitHub",
+        parts: parts.map((part, index) => ({ url: `https://example.test/part-${index}`, size: part.length }))
+      }]
+    },
+    fetchImpl: async (url) => {
+      requested.push(url);
+      const index = Number(url.at(-1));
+      return new Response(parts[index], { headers: { "content-length": String(parts[index].length) } });
+    }
+  });
+
+  await manager.download();
+  assert.deepEqual(await readFile(manager.modelPath), content);
+  assert.equal(requested.length, 2);
+  assert.equal(manager.status().phase, "installed");
+});
+
+test("model manager falls back when the GitHub model mirror is unavailable", async (context) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "lingua-model-test-"));
+  context.after(() => rm(directory, { recursive: true, force: true }));
+  const content = Buffer.from("fallback model");
+  const manager = new ModelManager(directory, {
+    model: {
+      name: "Test",
+      fileName: "fallback.litertlm",
+      size: content.length,
+      sha256: createHash("sha256").update(content).digest("hex"),
+      downloads: [
+        { name: "GitHub", parts: [{ url: "https://example.test/missing", size: content.length }] },
+        { name: "fallback", parts: [{ url: "https://example.test/model", size: content.length }] }
+      ]
+    },
+    fetchImpl: async (url) => url.endsWith("missing")
+      ? new Response(null, { status: 503 })
+      : new Response(content, { headers: { "content-length": String(content.length) } })
+  });
+
+  await manager.download();
+  assert.deepEqual(await readFile(manager.modelPath), content);
+  assert.equal(manager.status().phase, "installed");
+});

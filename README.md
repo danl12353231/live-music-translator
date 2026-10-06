@@ -18,10 +18,10 @@ An always-on-top, line-by-line lyrics translator for language learning. Live Mus
 | Platform | Release build |
 | --- | --- |
 | macOS | Apple silicon (`macos-arm64`) |
-| Windows | Windows 10/11 x64 ZIP (`windows-x64`) |
+| Windows | Windows 10/11 x64 installer (`windows-x64`) |
 | Linux | x64 AppImage (`linux-x64`) |
 
-The local Gemma model is included, so no model download is needed after installation. Because each offline installer is larger than GitHub's 2 GiB per-file limit, release pages may provide it as numbered `.part-*` files. Download every part for your platform and follow the included `REASSEMBLE-*.txt` instructions. Checksums are provided with every build.
+Installers are direct downloads and do not need to be reassembled. On first launch, the app automatically downloads and verifies the 2.59 GB Gemma model once from this repository's dedicated model release, with the upstream Hugging Face file as a fallback. Translation stays local after that.
 
 Current community builds are unsigned. macOS Gatekeeper or Windows SmartScreen may ask you to approve the application manually.
 
@@ -33,7 +33,7 @@ Current community builds are unsigned. macOS Gatekeeper or Windows SmartScreen m
 - Works with system media sessions instead of being tied to one music player.
 - Uses YouTube Music timed lyrics with LRCLIB as a concurrent fallback.
 - Runs translation locally with Gemma 4 E2B and native LiteRT-LM GPU acceleration.
-- Preloads the model before showing the overlay, avoiding cold-start delays mid-song.
+- Downloads the model automatically on first launch, then preloads it before showing the overlay on later launches.
 - Cancels obsolete requests and pre-translates upcoming lines for instant display.
 - Captures no microphone or system audio.
 
@@ -96,11 +96,11 @@ npm install
 npm start
 ```
 
-The first development run downloads and verifies the pinned 2.59 GB Gemma model and LiteRT-LM SDK, then compiles the native helper. Packaged releases include the model and runtime already.
+The first run downloads and verifies the pinned 2.59 GB Gemma model. The native LiteRT-LM SDK is downloaded at build time so the platform helper can be compiled and included with the app.
 
 ## Usage
 
-1. Start Live Music Translator and wait for the overlay to appear. The model is fully preloaded first.
+1. Start Live Music Translator. On the first launch, keep it open while the verified model downloads; subsequent launches preload the installed model before showing the overlay.
 2. Play a song in any player that publishes system media metadata.
 3. Open the gear menu and choose the language you understand.
 4. Adjust timing in 0.25-second increments if a recording is slightly early or late.
@@ -122,13 +122,14 @@ The unit suite covers lyric parsing and matching, playback adapters, model integ
 npm run dist
 ```
 
-Electron Builder creates installers for the current platform in `dist/`. Build on macOS, Windows, and Linux separately for native releases. The unpacked application is roughly 2.8 GB because the model is bundled for fully local translation.
+Electron Builder creates installers for the current platform in `dist/`. Build on macOS, Windows, and Linux separately for native releases. The model is stored in the user's application-data directory after the first launch rather than bundled into each installer.
 
 Model and SDK downloads are pinned by exact byte size and SHA-256 checksum in the build scripts. Generated models, SDK files, installers, and native binaries are excluded from Git.
 
 ## Privacy and network access
 
 - Translation is performed locally. Lyric text is not sent to a translation API.
+- The verified Gemma model is downloaded once from this repository's GitHub model release on first launch, with Hugging Face as a fallback.
 - The application does not listen to or record audio.
 - Track title, artist, album, and duration are sent to YouTube Music and LRCLIB to locate synchronized lyrics.
 - Lyrics are held in application memory and are not committed to this repository.

@@ -12,7 +12,7 @@ Live Music Translator includes, downloads, or communicates with third-party soft
 ## Local AI runtime and model
 
 - **LiteRT-LM** — Apache License 2.0 — <https://github.com/google-ai-edge/LiteRT-LM>
-- **Gemma 4 E2B LiteRT-LM model** — see the model card and license published with the model — <https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm>
+- **Gemma 4 E2B LiteRT-LM model** — Apache License 2.0; distributed unchanged from the upstream LiteRT Community package — <https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm>, <https://ai.google.dev/gemma/docs/gemma_4_license>
 
 The preparation script downloads a pinned LiteRT-LM SDK archive. Its `LICENSE` and complete dependency-license directory are copied into packaged applications beside the native runtime.
 

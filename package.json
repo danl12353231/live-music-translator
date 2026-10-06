@@ -17,13 +17,13 @@
   "scripts": {
     "prepare:model": "node scripts/download-model.js",
     "prepare:native": "node scripts/prepare-native.js",
-    "prestart": "npm run prepare:model && npm run prepare:native",
+    "prestart": "npm run prepare:native",
     "start": "electron .",
     "smoke:translation": "npm run prepare:native && electron scripts/smoke-translation.js",
     "test": "node --test",
-    "prepack": "npm run prepare:model && npm run prepare:native",
+    "prepack": "npm run prepare:native",
     "pack": "electron-builder --dir",
-    "predist": "npm run prepare:model && npm run prepare:native",
+    "predist": "npm run prepare:native",
     "dist": "electron-builder"
   },
   "dependencies": {
@@ -44,10 +44,6 @@
       "src/playback/*.ps1"
     ],
     "extraResources": [
-      {
-        "from": "models/gemma-4-E2B-it.litertlm",
-        "to": "models/gemma-4-E2B-it.litertlm"
-      },
       {
         "from": "native/release",
         "to": "native"

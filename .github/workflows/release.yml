@@ -59,7 +59,7 @@ jobs:
             build: npx electron-builder --mac dmg --publish never
           - runner: windows-latest
             platform: windows-x64
-            build: npx electron-builder --win zip --publish never
+            build: npx electron-builder --win nsis --publish never
           - runner: ubuntu-latest
             platform: linux-x64
             build: npx electron-builder --linux AppImage --publish never
@@ -81,9 +81,6 @@ jobs:
       - name: Run tests
         if: env.BUILD_SELECTED == 'true'
         run: npm test
-      - name: Download verified model
-        if: env.BUILD_SELECTED == 'true'
-        run: npm run prepare:model
       - name: Build native LiteRT-LM helper
         if: env.BUILD_SELECTED == 'true'
         run: npm run prepare:native

@@ -1,16 +1,37 @@
 import { createHash } from "node:crypto";
-import { createReadStream, createWriteStream } from "node:fs";
-import { mkdir, rename, stat, statfs, unlink } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { mkdir, open, rename, stat, statfs, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 
 export const GEMMA_MODEL = Object.freeze({
   name: "Gemma 4 E2B",
   fileName: "gemma-4-E2B-it.litertlm",
   size: 2_588_147_712,
   sha256: "181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c",
-  url: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm"
+  url: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm",
+  downloads: [
+    {
+      name: "GitHub",
+      parts: [
+        {
+          url: "https://github.com/danl12353231/live-music-translator/releases/download/model-gemma-4-e2b-v1/gemma-4-E2B-it.litertlm.part-01",
+          size: 1_300_000_000
+        },
+        {
+          url: "https://github.com/danl12353231/live-music-translator/releases/download/model-gemma-4-e2b-v1/gemma-4-E2B-it.litertlm.part-02",
+          size: 1_288_147_712
+        }
+      ]
+    },
+    {
+      name: "Hugging Face fallback",
+      parts: [{
+        url: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm",
+        size: 2_588_147_712
+      }]
+    }
+  ]
 });
 
 export class ModelManager {
@@ -80,47 +101,66 @@ export class ModelManager {
     }
 
     const partialPath = `${this.localModelPath}.part`;
-    await safeUnlink(partialPath);
-    this.update({ phase: "downloading", progress: 0, downloaded: 0, message: "Downloading Gemma…" });
-
-    try {
-      const response = await this.fetchImpl(this.model.url, { redirect: "follow" });
-      if (!response.ok || !response.body) throw new Error(`Model download failed (HTTP ${response.status})`);
-      const declaredSize = Number(response.headers.get("content-length"));
-      if (declaredSize && declaredSize !== this.model.size) throw new Error("The model download has an unexpected size");
-
-      let downloaded = 0;
-      let lastNotice = 0;
-      const hash = createHash("sha256");
-      const source = Readable.fromWeb(response.body);
-      source.on("data", (chunk) => {
-        downloaded += chunk.length;
-        hash.update(chunk);
-        const now = Date.now();
-        if (now - lastNotice >= 250 || downloaded === this.model.size) {
-          lastNotice = now;
-          this.update({
-            phase: "downloading",
-            downloaded,
-            progress: Math.min(1, downloaded / this.model.size),
-            message: `Downloading Gemma… ${formatBytes(downloaded)} of ${formatBytes(this.model.size)}`
-          });
-        }
-      });
-      await pipeline(source, createWriteStream(partialPath, { flags: "wx" }));
-
-      if (downloaded !== this.model.size) throw new Error("The model download is incomplete");
-      if (hash.digest("hex") !== this.model.sha256) throw new Error("The model checksum did not match");
-      await safeUnlink(this.localModelPath);
-      await rename(partialPath, this.localModelPath);
-      this.activePath = this.localModelPath;
-      this.update({ phase: "installed", progress: 1, downloaded, message: "Gemma is installed" });
-      return this.localModelPath;
-    } catch (error) {
+    const downloads = this.model.downloads || [{
+      name: "model host",
+      parts: [{ url: this.model.url, size: this.model.size }]
+    }];
+    let lastError;
+    for (const download of downloads) {
       await safeUnlink(partialPath);
-      this.update({ phase: "error", message: error.message });
-      throw error;
+      try {
+        const { downloaded, sha256 } = await this.downloadFrom(download, partialPath);
+        if (downloaded !== this.model.size) throw new Error("The model download is incomplete");
+        if (sha256 !== this.model.sha256) throw new Error("The model checksum did not match");
+        await safeUnlink(this.localModelPath);
+        await rename(partialPath, this.localModelPath);
+        this.activePath = this.localModelPath;
+        this.update({ phase: "installed", progress: 1, downloaded, message: "Gemma is installed" });
+        return this.localModelPath;
+      } catch (error) {
+        lastError = error;
+        await safeUnlink(partialPath);
+      }
     }
+    this.update({ phase: "error", message: lastError?.message || "Model download failed" });
+    throw lastError || new Error("Model download failed");
+  }
+
+  async downloadFrom(download, destination) {
+    const output = await open(destination, "wx");
+    const hash = createHash("sha256");
+    let downloaded = 0;
+    let lastNotice = 0;
+    this.update({ phase: "downloading", progress: 0, downloaded: 0, message: `Downloading Gemma from ${download.name}…` });
+    try {
+      for (const part of download.parts) {
+        const response = await this.fetchImpl(part.url, { redirect: "follow" });
+        if (!response.ok || !response.body) throw new Error(`Model download failed (HTTP ${response.status})`);
+        const declaredSize = Number(response.headers.get("content-length"));
+        if (declaredSize && declaredSize !== part.size) throw new Error("A model download part has an unexpected size");
+        let partBytes = 0;
+        for await (const chunk of Readable.fromWeb(response.body)) {
+          await output.write(chunk);
+          partBytes += chunk.length;
+          downloaded += chunk.length;
+          hash.update(chunk);
+          const now = Date.now();
+          if (now - lastNotice >= 250 || downloaded === this.model.size) {
+            lastNotice = now;
+            this.update({
+              phase: "downloading",
+              downloaded,
+              progress: Math.min(1, downloaded / this.model.size),
+              message: `Downloading Gemma from ${download.name}… ${formatBytes(downloaded)} of ${formatBytes(this.model.size)}`
+            });
+          }
+        }
+        if (partBytes !== part.size) throw new Error("A model download part is incomplete");
+      }
+    } finally {
+      await output.close();
+    }
+    return { downloaded, sha256: hash.digest("hex") };
   }
 
   update(patch) {

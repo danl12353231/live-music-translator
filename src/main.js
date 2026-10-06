@@ -13,6 +13,7 @@ import { LocalTranslationHost } from "./translation/host.js";
 const here = path.dirname(fileURLToPath(import.meta.url));
 let translator;
 let translationHost;
+let translationInstallPromise;
 let modelManager;
 let window;
 let pollTimer;
@@ -54,7 +55,8 @@ app.whenReady().then(async () => {
   });
   await modelManager.check();
   registerIPC();
-  if (modelManager.status().phase === "installed") {
+  const modelInstalled = modelManager.status().phase === "installed";
+  if (modelInstalled) {
     try {
       const host = await ensureTranslationHost();
       await host.initialize();
@@ -66,6 +68,7 @@ app.whenReady().then(async () => {
   pollTimer = setInterval(pollSafely, mediaPollMilliseconds);
   lineTimer = setInterval(updateLine, 150);
   await pollSafely();
+  if (!modelInstalled) void installTranslation().catch(() => {});
 });
 
 app.on("window-all-closed", () => {
@@ -142,9 +145,7 @@ function registerIPC() {
     return publicPreferences();
   });
   ipcMain.handle("translation:install", async () => {
-    await modelManager.download();
-    const host = await ensureTranslationHost();
-    await host.initialize();
+    await installTranslation();
     return state.translationStatus;
   });
   ipcMain.on("window:minimize", () => window?.minimize());
@@ -310,6 +311,16 @@ async function ensureTranslationHost() {
   return translationHost;
 }
 
+function installTranslation() {
+  if (translationInstallPromise) return translationInstallPromise;
+  translationInstallPromise = (async () => {
+    await modelManager.download();
+    const host = await ensureTranslationHost();
+    await host.initialize();
+  })().finally(() => { translationInstallPromise = null; });
+  return translationInstallPromise;
+}
+
 function nativeHelperPath() {
   const executable = process.platform === "win32" ? "live-music-translator-helper.exe" : "live-music-translator-helper";
   if (app.isPackaged) return path.join(process.resourcesPath, "native", executable);
@@ -327,7 +338,7 @@ function updateTranslationStatus(status) {
 }
 
 function translationPlaceholder(status) {
-  if (status.phase === "not-installed") return "Install Gemma in Settings to translate offline";
+  if (status.phase === "not-installed") return "Gemma will download automatically for offline translation";
   if (status.phase === "downloading") return status.message;
   if (status.phase === "checking" || status.phase === "installed" || status.phase === "loading") return "Preparing local translation…";
   if (status.phase === "unsupported") return "Local translation is unavailable on this computer";
