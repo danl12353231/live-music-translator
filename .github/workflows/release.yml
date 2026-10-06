@@ -10,6 +10,16 @@ on:
         description: Existing release tag to rebuild
         required: true
         default: v0.1.0
+      platform:
+        description: Platform to rebuild
+        required: true
+        type: choice
+        default: all
+        options:
+          - all
+          - macos-arm64
+          - windows-x64
+          - linux-x64
 
 env:
   RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -56,25 +66,35 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      BUILD_SELECTED: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        if: env.BUILD_SELECTED == 'true'
       - uses: actions/setup-node@v4
+        if: env.BUILD_SELECTED == 'true'
         with:
           node-version: 22
           cache: npm
       - name: Install dependencies
+        if: env.BUILD_SELECTED == 'true'
         run: npm ci
       - name: Run tests
+        if: env.BUILD_SELECTED == 'true'
         run: npm test
       - name: Download verified model
+        if: env.BUILD_SELECTED == 'true'
         run: npm run prepare:model
       - name: Build native LiteRT-LM helper
+        if: env.BUILD_SELECTED == 'true'
         run: npm run prepare:native
       - name: Package application
+        if: env.BUILD_SELECTED == 'true'
         run: ${{ matrix.build }}
       - name: Prepare release assets
+        if: env.BUILD_SELECTED == 'true'
         run: node scripts/prepare-release-assets.js --platform "${{ matrix.platform }}"
       - name: Upload release assets
+        if: env.BUILD_SELECTED == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
