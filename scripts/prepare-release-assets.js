@@ -36,7 +36,6 @@ if (info.size <= maxPartBytes) {
   const destination = path.join(output, fileName);
   await rename(source, destination);
   checksums.push(`${await sha256(destination)}  ${fileName}`);
-  instructions.push(`Download ${fileName} and open it normally.`);
 } else {
   const result = await splitFile(source, output, fileName);
   checksums.push(`${result.fullHash}  ${fileName}`);
@@ -46,7 +45,9 @@ if (info.size <= maxPartBytes) {
 }
 
 await writeFile(path.join(output, `SHA256SUMS-${platform}.txt`), `${checksums.join("\n")}\n`, "utf8");
-await writeFile(path.join(output, `REASSEMBLE-${platform}.txt`), `${instructions.join("\n")}\n`, "utf8");
+if (instructions.length) {
+  await writeFile(path.join(output, `REASSEMBLE-${platform}.txt`), `${instructions.join("\n")}\n`, "utf8");
+}
 
 async function splitFile(file, directory, originalName) {
   const input = await open(file, "r");
