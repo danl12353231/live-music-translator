@@ -1,6 +1,6 @@
 # Live Music Translator
 
-The first public release of Live Music Translator: an always-on-top, line-by-line lyrics overlay with fully local Gemma translation.
+Version 0.1.1 fixes first-launch ordering so the verified local translator is fully ready before music monitoring begins.
 
 ## Download and install
 
@@ -12,7 +12,7 @@ Choose the assets for your platform:
 
 Each platform is provided as one direct download. On first launch, Live Music Translator automatically downloads and verifies the 2.59 GB Gemma model from the project's dedicated GitHub model release. After that, translation runs locally without a translation service.
 
-These community builds are not yet code-signed or notarized, so macOS Gatekeeper or Windows SmartScreen may require manual approval.
+The macOS build is Developer ID signed but not notarized. Windows is currently unsigned. macOS Gatekeeper or Windows SmartScreen may therefore require manual approval.
 
 ## Highlights
 

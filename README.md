@@ -23,7 +23,7 @@ An always-on-top, line-by-line lyrics translator for language learning. Live Mus
 
 Installers are direct downloads and do not need to be reassembled. On first launch, the app automatically downloads and verifies the 2.59 GB Gemma model once from this repository's dedicated model release, with the upstream Hugging Face file as a fallback. Translation stays local after that.
 
-Current community builds are unsigned. macOS Gatekeeper or Windows SmartScreen may ask you to approve the application manually.
+The macOS build is Developer ID signed but not notarized, and Windows is currently unsigned. macOS Gatekeeper or Windows SmartScreen may ask you to approve the application manually.
 
 ## Features
 
