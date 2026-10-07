@@ -1,3 +1,9 @@
+## Support
+
+If Live Music Translator helps with your language learning, you can support continued development:
+
+<a href="https://ko-fi.com/U2P428BPKQ" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi5.png?v=3" alt="Support me on Ko-fi" height="44"></a>
+
 # Live Music Translator
 
 An always-on-top, line-by-line lyrics translator for language learning. Live Music Translator follows the song playing on your computer, finds synchronized lyrics, detects their language, and shows the current line with an offline translation underneath.
@@ -152,10 +158,3 @@ test/                   dependency-light unit tests
 
 The application source is available under the [MIT License](LICENSE). Third-party runtimes, models, services, and generated artifacts retain their own licenses and terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-## Support
-
-If Live Music Translator helps with your language learning, you can support continued development:
-
-<a href="https://ko-fi.com/U2P428BPKQ" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi5.png?v=3" alt="Support me on Ko-fi" height="44"></a>
-
-GitHub sanitizes executable `<script>` tags in README files, so the Ko-fi widget is represented by the official clickable Ko-fi image instead.
