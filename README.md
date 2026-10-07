@@ -33,7 +33,7 @@ Current community builds are unsigned. macOS Gatekeeper or Windows SmartScreen m
 - Works with system media sessions instead of being tied to one music player.
 - Uses YouTube Music timed lyrics with LRCLIB as a concurrent fallback.
 - Runs translation locally with Gemma 4 E2B and native LiteRT-LM GPU acceleration.
-- Downloads the model automatically on first launch, then preloads it before showing the overlay on later launches.
+- Downloads the model automatically on first launch, then preloads it on later launches. Music detection does not start until the local translator is ready.
 - Cancels obsolete requests and pre-translates upcoming lines for instant display.
 - Captures no microphone or system audio.
 
@@ -100,7 +100,7 @@ The first run downloads and verifies the pinned 2.59 GB Gemma model. The native 
 
 ## Usage
 
-1. Start Live Music Translator. On the first launch, keep it open while the verified model downloads; subsequent launches preload the installed model before showing the overlay.
+1. Start Live Music Translator. On the first launch, keep it open while the verified model downloads. Music detection begins only after the model has downloaded and preloaded successfully.
 2. Play a song in any player that publishes system media metadata.
 3. Open the gear menu and choose the language you understand.
 4. Adjust timing in 0.25-second increments if a recording is slightly early or late.

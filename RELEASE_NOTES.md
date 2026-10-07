@@ -16,6 +16,7 @@ These community builds are not yet code-signed or notarized, so macOS Gatekeeper
 
 ## Highlights
 
+- The model now downloads and preloads before music detection starts
 - Synchronized lyrics from YouTube Music with LRCLIB fallback
 - Automatic lyric-language detection
 - Native, offline Gemma 4 E2B translation through LiteRT-LM

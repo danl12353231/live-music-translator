@@ -20,6 +20,8 @@ let pollTimer;
 let lineTimer;
 let pollInFlight = false;
 let startupReady = false;
+let startupPreparationPromise;
+let playbackStarted = false;
 let lyricAbort;
 let loadingKey = "";
 let lyricRetryAt = 0;
@@ -55,20 +57,9 @@ app.whenReady().then(async () => {
   });
   await modelManager.check();
   registerIPC();
-  const modelInstalled = modelManager.status().phase === "installed";
-  if (modelInstalled) {
-    try {
-      const host = await ensureTranslationHost();
-      await host.initialize();
-    } catch { /* The visible app will report the initialization error. */ }
-  }
   startupReady = true;
   createWindow();
-  const mediaPollMilliseconds = process.platform === "win32" ? 2000 : 1000;
-  pollTimer = setInterval(pollSafely, mediaPollMilliseconds);
-  lineTimer = setInterval(updateLine, 150);
-  await pollSafely();
-  if (!modelInstalled) void installTranslation().catch(() => {});
+  void prepareApplication().catch(() => {});
 });
 
 app.on("window-all-closed", () => {
@@ -137,7 +128,7 @@ function registerIPC() {
     preferences = { ...preferences, ...allowed };
     await savePreferences();
     if (targetChanged) {
-      translator.clear();
+      translator?.clear();
       lastLineIndex = -2;
       state.translation = "";
     }
@@ -145,7 +136,7 @@ function registerIPC() {
     return publicPreferences();
   });
   ipcMain.handle("translation:install", async () => {
-    await installTranslation();
+    await prepareApplication();
     return state.translationStatus;
   });
   ipcMain.on("window:minimize", () => window?.minimize());
@@ -321,6 +312,51 @@ function installTranslation() {
   return translationInstallPromise;
 }
 
+function prepareApplication() {
+  if (playbackStarted) return Promise.resolve();
+  if (startupPreparationPromise) return startupPreparationPromise;
+  startupPreparationPromise = (async () => {
+    if (modelManager.status().phase === "installed") {
+      const host = await ensureTranslationHost();
+      await host.initialize();
+    } else {
+      await installTranslation();
+    }
+    await startPlaybackMonitoring();
+  })().catch((error) => {
+    state = {
+      ...state,
+      status: "translation-error",
+      message: error.message || "Offline translator setup failed",
+      currentLine: "",
+      translation: ""
+    };
+    sendState();
+    throw error;
+  }).finally(() => { startupPreparationPromise = null; });
+  return startupPreparationPromise;
+}
+
+async function startPlaybackMonitoring() {
+  if (playbackStarted) return;
+  if (state.translationStatus.phase !== "ready") throw new Error("Offline translator is not ready");
+  playbackStarted = true;
+  state = {
+    ...state,
+    status: "waiting",
+    message: "Play a song to begin",
+    track: null,
+    currentLine: "",
+    translation: "",
+    lineIndex: -1
+  };
+  sendState();
+  const mediaPollMilliseconds = process.platform === "win32" ? 2000 : 1000;
+  pollTimer = setInterval(pollSafely, mediaPollMilliseconds);
+  lineTimer = setInterval(updateLine, 150);
+  await pollSafely();
+}
+
 function nativeHelperPath() {
   const executable = process.platform === "win32" ? "live-music-translator-helper.exe" : "live-music-translator-helper";
   if (app.isPackaged) return path.join(process.resourcesPath, "native", executable);
@@ -329,6 +365,15 @@ function nativeHelperPath() {
 
 function updateTranslationStatus(status) {
   state.translationStatus = { ...state.translationStatus, ...status };
+  if (!playbackStarted) {
+    state = {
+      ...state,
+      status: status.phase === "error" ? "translation-error" : "loading",
+      message: status.message || "Preparing offline translation…",
+      currentLine: "",
+      translation: ""
+    };
+  }
   if (status.phase === "ready") {
     lastLineIndex = -2;
     updateLine();
