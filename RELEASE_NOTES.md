@@ -16,6 +16,7 @@ The macOS build is Developer ID signed but not notarized. Windows is currently u
 
 ## Highlights
 
+- A new cross-platform application icon designed for music and live translation
 - The model now downloads and preloads before music detection starts
 - Synchronized lyrics from YouTube Music with LRCLIB fallback
 - Automatic lyric-language detection

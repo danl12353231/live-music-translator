@@ -1,6 +1,6 @@
 {
   "name": "live-music-translator",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A cross-platform, always-on-top synced lyrics overlay for language learners.",
   "author": "Daniel Lahlafi",
   "license": "MIT",
@@ -50,6 +50,7 @@
       }
     ],
     "mac": {
+      "icon": "build/icon.icns",
       "category": "public.app-category.education",
       "target": [
         "dmg",
@@ -57,12 +58,14 @@
       ]
     },
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "nsis",
         "portable"
       ]
     },
     "linux": {
+      "icon": "build/icon.png",
       "category": "Education",
       "target": [
         "AppImage",
