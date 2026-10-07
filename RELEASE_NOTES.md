@@ -1,6 +1,6 @@
 # Live Music Translator
 
-Version 0.1.1 fixes first-launch ordering so the verified local translator is fully ready before music monitoring begins.
+Version 0.1.3 refines the application icon with a clean, uniform edge while retaining the music-and-translation emblem.
 
 ## Download and install
 
@@ -16,7 +16,7 @@ The macOS build is Developer ID signed but not notarized. Windows is currently u
 
 ## Highlights
 
-- A new cross-platform application icon designed for music and live translation
+- A refined cross-platform application icon with crisp, haze-free edges
 - The model now downloads and preloads before music detection starts
 - Synchronized lyrics from YouTube Music with LRCLIB fallback
 - Automatic lyric-language detection
