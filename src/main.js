@@ -23,6 +23,8 @@ let startupReady = false;
 let startupPreparationPromise;
 let playbackStarted = false;
 let lyricAbort;
+let quitCleanupStarted = false;
+let quitCleanupComplete = false;
 let loadingKey = "";
 let lyricRetryAt = 0;
 let lastLineIndex = -2;
@@ -63,9 +65,7 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
-  clearInterval(pollTimer);
-  clearInterval(lineTimer);
-  if (process.platform !== "darwin") app.quit();
+  app.quit();
 });
 
 app.on("activate", () => {
@@ -74,8 +74,15 @@ app.on("activate", () => {
   else window?.show();
 });
 
-app.on("before-quit", () => {
-  translationHost?.close().catch(() => {});
+app.on("before-quit", (event) => {
+  if (quitCleanupComplete) return;
+  event.preventDefault();
+  if (quitCleanupStarted) return;
+  quitCleanupStarted = true;
+  void shutdownApplication().finally(() => {
+    quitCleanupComplete = true;
+    app.quit();
+  });
 });
 
 function createWindow() {
@@ -140,7 +147,22 @@ function registerIPC() {
     return state.translationStatus;
   });
   ipcMain.on("window:minimize", () => window?.minimize());
-  ipcMain.on("window:close", () => process.platform === "darwin" ? window?.close() : app.quit());
+  ipcMain.on("window:close", () => app.quit());
+}
+
+async function shutdownApplication() {
+  clearInterval(pollTimer);
+  clearInterval(lineTimer);
+  pollTimer = undefined;
+  lineTimer = undefined;
+  playbackStarted = false;
+  lyricAbort?.abort();
+  lyricAbort = undefined;
+  try {
+    await translationHost?.close();
+  } catch {
+    // Quitting must continue even if the native helper has already stopped.
+  }
 }
 
 async function poll() {

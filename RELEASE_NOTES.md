@@ -1,6 +1,6 @@
 # Live Music Translator
 
-Version 0.1.3 refines the application icon with a clean, uniform edge while retaining the music-and-translation emblem.
+Version 0.1.4 fixes application shutdown so closing the overlay exits completely on macOS, Windows, and Linux.
 
 ## Download and install
 
@@ -16,6 +16,7 @@ The macOS build is Developer ID signed but not notarized. Windows is currently u
 
 ## Highlights
 
+- Closing the overlay now stops playback monitoring and the native translator before exiting
 - A refined cross-platform application icon with crisp, haze-free edges
 - The model now downloads and preloads before music detection starts
 - Synchronized lyrics from YouTube Music with LRCLIB fallback

@@ -1,6 +1,6 @@
 {
   "name": "live-music-translator",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A cross-platform, always-on-top synced lyrics overlay for language learners.",
   "author": "Daniel Lahlafi",
   "license": "MIT",

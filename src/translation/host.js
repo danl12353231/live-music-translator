@@ -16,6 +16,7 @@ export class LocalTranslationHost {
   }
 
   async initialize() {
+    if (this.closing) throw new Error("Native translator is shutting down");
     if (this.phase === "ready" && this.child && !this.child.killed) return;
     if (this.initializePromise) return this.initializePromise;
     this.phase = "loading";
@@ -29,6 +30,7 @@ export class LocalTranslationHost {
       await this.start("gpu");
     } catch (gpuError) {
       await this.stopChild();
+      if (this.closing) throw new Error("Native translator is shutting down");
       this.onStatus({ phase: "loading", message: "GPU unavailable — loading the native CPU runtime…" });
       try {
         await this.start("cpu");
@@ -49,6 +51,7 @@ export class LocalTranslationHost {
   }
 
   async start(backend) {
+    if (this.closing) throw new Error("Native translator is shutting down");
     await mkdir(this.cachePath, { recursive: true });
     this.backend = backend;
     this.stderr = [];
@@ -107,6 +110,12 @@ export class LocalTranslationHost {
   async close() {
     this.closing = true;
     this.rejectAll(new Error("Native translator stopped"));
+    await this.stopChild();
+    try {
+      await this.initializePromise;
+    } catch {
+      // Initialization rejects when shutdown interrupts model preloading.
+    }
     await this.stopChild();
   }
 
